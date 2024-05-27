@@ -27,7 +27,7 @@ gen = Sequential(
     L.BatchNorm(),
     F.relu,
     L.Deconv2d(1, kernel_size=4, stride=2, pad=1),
-    F.sigmoid
+    F.sigmoid,
 )
 
 dis = Sequential(
@@ -41,7 +41,7 @@ dis = Sequential(
     L.BatchNorm(),
     F.leaky_relu,
     L.Linear(1),
-    F.sigmoid
+    F.sigmoid,
 )
 
 
@@ -54,8 +54,9 @@ def init_weight(dis, gen, hidden_size):
 
     for l in dis.layers + gen.layers:
         classname = l.__class__.__name__
-        if classname.lower() in ('conv2d', 'linear', 'deconv2d'):
+        if classname.lower() in ("conv2d", "linear", "deconv2d"):
             l.W.data = 0.02 * np.random.randn(*l.W.data.shape)
+
 
 init_weight(dis, gen, hidden_size)
 
@@ -74,8 +75,8 @@ if use_gpu:
 else:
     xp = np
 
-label_real = xp.ones(batch_size).astype(np.int)
-label_fake = xp.zeros(batch_size).astype(np.int)
+label_real = xp.ones(batch_size).astype(int)
+label_fake = xp.zeros(batch_size).astype(int)
 test_z = xp.random.randn(25, hidden_size).astype(np.float32)
 
 
@@ -86,11 +87,12 @@ def generate_image():
     img = dezero.cuda.as_numpy(fake_images.data)
     plt.figure()
     for i in range(0, 25):
-        ax = plt.subplot(5, 5, i+1)
-        ax.axis('off')
-        plt.imshow(img[i][0], 'gray')
+        ax = plt.subplot(5, 5, i + 1)
+        ax.axis("off")
+        plt.imshow(img[i][0], "gray")
     plt.show()
-    #plt.savefig('gan_{}.png'.format(idx))
+    # plt.savefig('gan_{}.png'.format(idx))
+
 
 for epoch in range(max_epoch):
     avg_loss_d = 0
@@ -107,8 +109,9 @@ for epoch in range(max_epoch):
         fake = gen(z)
         y_real = dis(x)
         y_fake = dis(fake.data)
-        loss_d = F.binary_cross_entropy(y_real, label_real) + \
-                 F.binary_cross_entropy(y_fake, label_fake)
+        loss_d = F.binary_cross_entropy(y_real, label_real) + F.binary_cross_entropy(
+            y_fake, label_fake
+        )
         gen.cleargrads()
         dis.cleargrads()
         loss_d.backward()
@@ -128,6 +131,9 @@ for epoch in range(max_epoch):
         interval = 100 if use_gpu else 5
         if cnt % interval == 0:
             epoch_detail = epoch + cnt / train_loader.max_iter
-            print('epoch: {:.2f}, loss_g: {:.4f}, loss_d: {:.4f}'.format(
-                epoch_detail, float(avg_loss_g/cnt), float(avg_loss_d/cnt)))
+            print(
+                "epoch: {:.2f}, loss_g: {:.4f}, loss_d: {:.4f}".format(
+                    epoch_detail, float(avg_loss_g / cnt), float(avg_loss_d / cnt)
+                )
+            )
             generate_image()
